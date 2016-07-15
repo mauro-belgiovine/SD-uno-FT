@@ -65,7 +65,7 @@ public class Game implements Serializable{
         return extra_col;
     } */
     
-    public int nextPlayer(){
+    public int nextPlayer(int p_turn){
         
         int p_next;
         
@@ -88,7 +88,7 @@ public class Game implements Serializable{
      public void execEffect(Action a){ //apply effect
         
         //Player p = players.get(p_turn);
-        int p_next = nextPlayer();
+        int p_next = nextPlayer(p_turn);
         Player next = players.get(p_next);
         
         if (extra_col != Color.NONE) extra_col = Color.NONE; //reset extra color (from DRAW4 or WILD) if a new card has been played
@@ -217,9 +217,10 @@ public class Game implements Serializable{
     public boolean getShowColors (){return show_colors;}
     public void setShowColors(boolean b) {show_colors = b;}
     public void setSkip(boolean b) {skip=b;}
-    public void nextRound(){
-        if (skip) p_turn=nextPlayer();
-        p_turn=nextPlayer();
+    public int nextRound(int p_turn){
+        int next = nextPlayer(p_turn);
+        if (skip) next = nextPlayer(next);
+        return next;
     }
     public List<Player> getPlayers() {return players;}
     

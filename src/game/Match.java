@@ -102,8 +102,8 @@ public class Match{
 
 
 
-                //int my_port = 50000+1+my_index;
-                int my_port = 50000;
+                int my_port = 50000+1+my_index;
+                //int my_port = 50000;
 
                 String name = "player."+me.getUuid();
 
@@ -175,13 +175,15 @@ public class Match{
 
             case GETSTATE:
                 //devo aggiornare lo stato di gioco dal balancer
-                int p_bal = (Integer) e.params.get("balancer");
 
+                Game gstate = (Game) e.params.get("state");
+
+                /*int p_bal = (Integer) e.params.get("balancer");
                 String name = "player." + g.players.get(p_bal).getUuid();
                 try {
 
-                    //Registry registry = LocateRegistry.getRegistry(g.players.get(p_bal).getIp(), 50000+1+p_bal);
-                    Registry registry = LocateRegistry.getRegistry(g.players.get(p_bal).getIp(), 50000);
+                    Registry registry = LocateRegistry.getRegistry(g.players.get(p_bal).getIp(), 50000+1+p_bal);
+                    //Registry registry = LocateRegistry.getRegistry(g.players.get(p_bal).getIp(), 50000);
                     r_game = (RemoteGame) registry.lookup(name);
 
                     g = r_game.getState();
@@ -192,7 +194,7 @@ public class Match{
                     System.err.println("sendUpdate() exception: ");
                     ex.printStackTrace();
 
-                }
+                }*/
                                 
                 /******* TODO quando ricevo un GETSTATE, controllo se nella dead_queue esiste ancora quel giocatore: 
                  * se non esiste e isDead(), scarto l'evento, altrimenti lo ripropago(?) 
@@ -206,7 +208,7 @@ public class Match{
                 
 	                if(dead != null){
 	                	
-	                	int suspicious_dead_index = g.players.indexOf((Player) dead.params.get("player_obj"));
+	                	int suspicious_dead_index = gstate.players.indexOf((Player) dead.params.get("player_obj"));
 	                	
 	                	if(suspicious_dead_index > -1){ //se e' ancora nella lista, vuol dire che non e' stato ancora ribilanciato
 	                		
@@ -217,7 +219,10 @@ public class Match{
 	                }
 	                
                 }while(dead != null);
-                
+
+                //setto lo stato attuale come quello ricevuto
+                g = gstate;
+
                 break;
 
             case DEAD:
@@ -248,8 +253,8 @@ public class Match{
                 String name = "player." + g.players.get(i).getUuid();
                 try {
 
-                    //Registry registry = LocateRegistry.getRegistry(g.players.get(i).getIp(), 50000+1+i);
-                    Registry registry = LocateRegistry.getRegistry(g.players.get(i).getIp(), 50000);
+                    Registry registry = LocateRegistry.getRegistry(g.players.get(i).getIp(), 50000+1+i);
+                    //Registry registry = LocateRegistry.getRegistry(g.players.get(i).getIp(), 50000);
                     r_game = (RemoteGame) registry.lookup(name);
 
                     Queue<GameEvent> queue = instance.getUpdates();
@@ -303,13 +308,13 @@ public class Match{
 
             try {
 
-               //Registry registry = LocateRegistry.getRegistry(g.players.get(i).getIp(), 50000+1+i);
-                Registry registry = LocateRegistry.getRegistry(g.players.get(i).getIp(), 50000);
+                Registry registry = LocateRegistry.getRegistry(g.players.get(i).getIp(), 50000+1+i);
+                //Registry registry = LocateRegistry.getRegistry(g.players.get(i).getIp(), 50000);
                 r_game = (RemoteGame) registry.lookup(name);
 
                 r_game.isAlive();
                 
-                //System.out.println("isAlive(): player "+g.players.get(i).getName()+" ("+i+") is OK.");
+                System.out.println("isAlive(): player "+g.players.get(i).getName()+" ("+i+") is OK.");
 
 
             } catch (Exception e) {
@@ -326,13 +331,16 @@ public class Match{
                     handleDeadPlayer(i); //ROUTINE DI AGGIORNAMENTO DELLO STATO DI GIOCO
                     int old_index = my_index;
                     my_index = g.players.indexOf(me); //ottengo il nuovo indice di gioco
-                    me.setHand(g.players.get(my_index).getHand());
-                    g.p_turn = (my_index + 1) % g.getNPlayer(); //impostiamo il giocatore successivo nella lista aggiornata dei giocatori
-                    
+                    me.setHand(g.players.get(my_index).getHand()); //TODO CHECK!!
+                    int i_next = (my_index + 1) % g.getNPlayer(); //decidiamo il giocatore successivo nella lista aggiornata dei giocatori
+
+                    Game gstate = g;
+
+                    gstate.p_turn = i_next; //settiamo il nuovo next nel nuovo stato di gioco
 
                     // generiamo l'evento GETSTATE per passare il nostro stato del gioco agli altri giocatori
                     Map<String, Object> map = new HashMap<String, Object>();
-                    map.put("balancer", old_index);
+                    map.put("state", gstate);
                     GameEvent evt = new GameEvent(Event.GETSTATE, map);
                     try {
                         instance.pushEvent(evt);
@@ -340,6 +348,8 @@ public class Match{
                     } catch (RemoteException e1) {
                         e1.printStackTrace();
                     }
+
+                    g = gstate; //settiamo il nuovo stato del gioco nel nostro
 
                 }else{
 
@@ -392,8 +402,8 @@ public class Match{
                     String name = "player." + g.players.get(y).getUuid();
                     try {
 
-                        //Registry registry = LocateRegistry.getRegistry(g.players.get(y).getIp(), 50000+1+y);
-                        Registry registry = LocateRegistry.getRegistry(g.players.get(y).getIp(), 50000);
+                        Registry registry = LocateRegistry.getRegistry(g.players.get(y).getIp(), 50000+1+y);
+                        //Registry registry = LocateRegistry.getRegistry(g.players.get(y).getIp(), 50000);
                         r_game = (RemoteGame) registry.lookup(name);
 
                         r_game.pushDead(evt); //invia la lista degli eventi ad ogni client
@@ -417,7 +427,7 @@ public class Match{
     public Color getExtraColor(){return g.extra_col;}
     public void setExtraColor(Color c) { g.setExtraColor(c);}
     public void setSkip(boolean b) {g.setSkip(b);}
-    public void nextRound(){g.nextRound();}
+    public int nextRound(int p_turn){ return g.nextRound(p_turn);}
     public List<Player> getPlayers() {return g.getPlayers();}
     //public void execEffect(Action a){ g.execEffect(a);}
     public Player getMe(){return me;}

@@ -87,7 +87,7 @@ public class UI extends JPanel{
                         m.put("card_i", card_index);
                         GameEvent evt = new GameEvent(Event.THROW, m);
                         try {
-                            (my_match.getInstance()).pushEvent(evt);
+                            my_match.getInstance().pushEvent(evt);
                         } catch (RemoteException e1) {
                             e1.printStackTrace();
                         }
@@ -106,7 +106,7 @@ public class UI extends JPanel{
                             m1.put("player", my_match.getMyIndex());
                             GameEvent evt1 = new GameEvent(Event.FINISH, m1);
                             try {
-                                (my_match.getInstance()).pushEvent(evt1);
+                                my_match.getInstance().pushEvent(evt1);
                             } catch (RemoteException e1) {
                                 e1.printStackTrace();
                             }
@@ -135,7 +135,7 @@ public class UI extends JPanel{
                         m.put("player", my_match.getMyIndex());
                         GameEvent evt = new GameEvent(net.Event.PICKUP, m);
                         try {
-                            (my_match.getInstance()).pushEvent(evt); //aggiungi questo evento alla coda
+                            my_match.getInstance().pushEvent(evt); //aggiungi questo evento alla coda
                         } catch (RemoteException e1) {
                             e1.printStackTrace();
                         }
@@ -155,7 +155,7 @@ public class UI extends JPanel{
                         m_extra.put("extra", my_match.getExtraColor());
                         GameEvent e_extra = new GameEvent(Event.EXTRA_COL, m_extra);
                         try {
-                            (my_match.getInstance()).pushEvent(e_extra);
+                            my_match.getInstance().pushEvent(e_extra);
                         } catch (RemoteException e1) {
                             e1.printStackTrace();
                         }
@@ -621,22 +621,21 @@ public class UI extends JPanel{
 
 
     // COSA FA --> calcola il giocatore successivo e passa il turno e gestisce il ribilanciamento dello stato di gioco se qualche player e' crashato
-    private void goToNextRound(){
+    /*private void goToNextRound(){
     	
-    	my_match.getGame().getPlayers().get(my_match.getMyIndex()).setHand(my_match.getMe().getHand()); //aggiorno la mia mano sullo stato del gioco
+    	my_match.getPlayers().get(my_match.getMyIndex()).setHand(my_match.getMe().getHand()); //aggiorno la mia mano sullo stato del gioco
     	
     	played = picked = false;
     	
     	GameEvent dead;
-    		
-    	
+
+        my_match.nextRound();//calcolo next round sul mio stato attuale del gioco (senza morti)
+        my_match.setSkip(false);
     	
 	    dead = my_match.getInstance().popDead();
 	    	
 	    if(dead == null){ //se non ci sono morti
-	    		
-	    	my_match.nextRound();
-		    my_match.setSkip(false);
+
 		
 		    //generiamo l'evento TURN
 		    Map<String, Object> m = new HashMap<String, Object>();
@@ -653,78 +652,62 @@ public class UI extends JPanel{
 	    	do{
 	    		
 	    		my_match.execEvent(dead); //segno nel mio stato di gioco chi e' morto
-	    		int dead_index = (Integer) dead.params.get("player");
-	    		
-	    		my_match.nextRound(); //calcolo next round sul mio stato attuale del gioco (senza morti)
-		        my_match.setSkip(false);
-		        
-		        // System.out.print("il next sarebbe ")
-		        
-		        if (my_match.getPlayers().get(my_match.getPturn()).isPlaying()){ //se quello a cui dovrei passare il turno e' ancora vivo
-		        	
-		        	Player next = my_match.getPlayers().get(my_match.getPturn()); //salvo il player successivo
-		        	
-		        	my_match.handleDeadPlayer(dead_index); // elimino dal gioco il player morto
-		        	
-		        	
-		        	
-		        	int old_index = my_match.getMyIndex(); //salvo il mio vecchio indice per comunicare agli altri giocatori dove prelevare lo stato (evento GETSTATE)
-		        	
-		        	my_match.setMyIndex(my_match.getPlayers().indexOf(my_match.getMe())); //setto il mio nuovo indice
-		        	
-		        	my_match.getMe().setHand(my_match.getPlayers().get(my_match.getMyIndex()).getHand()); //setto la nuova mano
-		        	
-		        	int new_next_index = my_match.getPlayers().indexOf(next); //vedo l'indice del next dopo il bilanciamento
-	
-		        	my_match.setPturn(new_next_index); //setto il NUOVO next nello stato di gioco
-		        	
-		        	// generiamo l'evento GETSTATE per passare il nostro stato del gioco agli altri giocatori
-	                Map<String, Object> map = new HashMap<String, Object>();
-	                map.put("balancer", old_index);
-	                GameEvent gs_evt = new GameEvent(Event.GETSTATE, map);
-	                //setto GETSTATE AL POSTO DI TURN!! e tutti riceveranno gli eventi giocati, ma riprenderanno dallo stato del gioco ri-bilanciato
-	                try {
-	    	            (my_match.getInstance()).pushEvent(gs_evt);
-	    	        } catch (RemoteException e1) {
-	    	            e1.printStackTrace();
-	    	        }
-		        		        	
-		        }else{ //se invece quello a cui sto passando il turno e' morto
-		        	
-		        	my_match.nextRound(); //calcolo IL NEXT DEL NEXT sul mio stato attuale del gioco (senza morti) 
-		        	
-		        	Player next = my_match.getPlayers().get(my_match.getPturn()); //salvo il player successivo
-		        	
-		        	my_match.handleDeadPlayer(dead_index); // elimino dal gioco il player morto
-		        	
-		        	
-		        	
-		        	int old_index = my_match.getMyIndex(); //salvo il mio vecchio indice per comunicare agli altri giocatori dove prelevare lo stato (evento GETSTATE)
-		        	
-		        	my_match.setMyIndex(my_match.getPlayers().indexOf(my_match.getMe())); //setto il mio nuovo indice
-		        	
-		        	my_match.getMe().setHand(my_match.getPlayers().get(my_match.getMyIndex()).getHand()); //setto la nuova mano
-		        			        	
-		        	int new_next_index = my_match.getPlayers().indexOf(next); //vedo l'indice del next dopo il bilanciamento
-	
-		        	my_match.setPturn(new_next_index); //setto il NUOVO next nello stato di gioco
-		        	
-		        	// generiamo l'evento GETSTATE per passare il nostro stato del gioco agli altri giocatori
-	                Map<String, Object> map = new HashMap<String, Object>();
-	                map.put("balancer", old_index);
-	                GameEvent gs_evt = new GameEvent(Event.GETSTATE, map);
-	                //setto GETSTATE AL POSTO DI TURN!! e tutti riceveranno gli eventi giocati, ma riprenderanno dallo stato del gioco ri-bilanciato
-	                try {
-	    	            (my_match.getInstance()).pushEvent(gs_evt);
-	    	        } catch (RemoteException e1) {
-	    	            e1.printStackTrace();
-	    	        }
-		        	
-		        }
-		        
-		        dead = my_match.getInstance().popDead();
-	    		
-	    	}while(dead != null);
+
+                dead = my_match.getInstance().popDead(); //estraggo il prossimo
+
+            }while(dead != null);
+
+            //per tutti i giocatori, a partire da quello successivo, vedo se sono morti o no
+            // calcolo il successivo finché non ne trovo uno vivo
+            boolean next_found = false;
+
+            for(int i = my_match.getPturn(); ((i < my_match.getNPlayer()) && !next_found); i = ((i + 1) % my_match.getNPlayer()) ) {
+
+
+                if (my_match.getPlayers().get(my_match.getPturn()).isPlaying()) { //se quello a cui dovrei passare il turno e' ancora vivo
+                    next_found = true;
+                } else { //se invece quello a cui sto passando il turno e' morto
+
+                    my_match.nextRound(); //calcolo IL NEXT DEL NEXT sul mio stato attuale del gioco (senza morti)
+
+                }
+
+            }
+
+            for(int i = 0; i < my_match.getNPlayer(); i++){
+
+                if(!my_match.getPlayers().get(i).isPlaying()) {
+
+                    int dead_index = (Integer) dead.params.get("player");
+
+                    Player next = my_match.getPlayers().get(my_match.getPturn()); //salvo il player successivo
+
+                    my_match.handleDeadPlayer(dead_index); // elimino dal gioco il player morto
+
+
+                    int old_index = my_match.getMyIndex(); //salvo il mio vecchio indice per comunicare agli altri giocatori dove prelevare lo stato (evento GETSTATE)
+
+                    my_match.setMyIndex(my_match.getPlayers().indexOf(my_match.getMe())); //setto il mio nuovo indice
+
+                    my_match.getMe().setHand(my_match.getPlayers().get(my_match.getMyIndex()).getHand()); //setto la nuova mano
+
+                    int new_next_index = my_match.getPlayers().indexOf(next); //vedo l'indice del next dopo il bilanciamento
+
+                    my_match.setPturn(new_next_index); //setto il NUOVO next nello stato di gioco
+
+                    // generiamo l'evento GETSTATE per passare il nostro stato del gioco agli altri giocatori
+                    Map<String, Object> map = new HashMap<String, Object>();
+                    map.put("balancer", old_index);
+                    GameEvent gs_evt = new GameEvent(Event.GETSTATE, map);
+                    //setto GETSTATE AL POSTO DI TURN!! e tutti riceveranno gli eventi giocati, ma riprenderanno dallo stato del gioco ri-bilanciato
+                    try {
+                        (my_match.getInstance()).pushEvent(gs_evt);
+                    } catch (RemoteException e1) {
+                        e1.printStackTrace();
+                    }
+                }
+
+            }
     	}
     	
     	// aggiornamento dello stato per gli altri giocatori
@@ -733,6 +716,99 @@ public class UI extends JPanel{
         } catch (RemoteException e1) {
             e1.printStackTrace();
         }
+
+        setCursor(new Cursor(Cursor.DEFAULT_CURSOR));
+
+        repaint();
+    }
+    */
+
+    private void goToNextRound(){
+
+        my_match.getGame().getPlayers().get(my_match.getMyIndex()).setHand(my_match.getMe().getHand()); //aggiorno la mia mano sullo stato del gioco
+
+        played = picked = false;
+
+        int i_next = my_match.nextRound(my_match.getPturn()); //calcolo next round sul mio stato attuale del gioco (senza morti)
+        my_match.setSkip(false);
+
+        GameEvent dead;
+
+        dead = my_match.getInstance().popDead();
+
+        if(dead == null){ //se non ci sono morti
+
+            //generiamo l'evento TURN
+            Map<String, Object> m = new HashMap<String, Object>();
+            m.put("next", i_next);
+            GameEvent evt = new GameEvent(Event.TURN, m);
+            try {
+                my_match.getInstance().pushEvent(evt);
+            } catch (RemoteException e1) {
+                e1.printStackTrace();
+            }
+
+        }else{ //ci sono morti
+
+            do{
+
+                my_match.execEvent(dead); //segno nel mio stato di gioco chi e' morto
+                int dead_index = (Integer) dead.params.get("player");
+
+                // System.out.print("il next sarebbe ")
+
+                if (my_match.getPlayers().get(my_match.getPturn()).isPlaying()){ //se quello a cui dovrei passare il turno e' ancora vivo
+
+                }else{ //se invece quello a cui sto passando il turno e' morto
+
+                    i_next = my_match.nextRound(i_next); //calcolo IL NEXT DEL NEXT sul mio stato attuale del gioco (senza morti)
+
+                }
+
+                Player next = my_match.getPlayers().get(i_next); //salvo il player successivo
+
+                my_match.handleDeadPlayer(dead_index); // elimino dal gioco il player morto
+
+                my_match.setMyIndex(my_match.getPlayers().indexOf(my_match.getMe())); //setto il mio nuovo indice
+
+                //**** TODO check!!
+                my_match.getMe().setHand(my_match.getPlayers().get(my_match.getMyIndex()).getHand()); //setto la nuova mano
+
+                int new_next_index = my_match.getPlayers().indexOf(next); //vedo l'indice del next dopo il bilanciamento
+
+                //my_match.setPturn(new_next_index); //setto il NUOVO next nello stato di gioco
+
+                Game gstate = my_match.getGame(); //TODO NON VA BENE! BISOGNA CLONARE L'OGGETTO
+                gstate.setPturn(new_next_index);
+
+                // generiamo l'evento GETSTATE per passare il nostro stato del gioco agli altri giocatori
+                Map<String, Object> map = new HashMap<String, Object>();
+                map.put("state", gstate);
+                GameEvent gs_evt = new GameEvent(Event.GETSTATE, map);
+                //setto GETSTATE AL POSTO DI TURN!! e tutti riceveranno gli eventi giocati, ma riprenderanno dallo stato del gioco ri-bilanciato
+                try {
+                    (my_match.getInstance()).pushEvent(gs_evt);
+                } catch (RemoteException e1) {
+                    e1.printStackTrace();
+                }
+
+                i_next = new_next_index; //assegnamo new_next_index a i_next per settarlo nel nostro stato dopo il ribilanciamento
+
+                dead = my_match.getInstance().popDead();
+
+            }while(dead != null);
+        }
+
+        // aggiornamento dello stato per gli altri giocatori
+        try {
+            my_match.sendUpdates();
+        } catch (RemoteException e1) {
+            e1.printStackTrace();
+        }
+
+        //IMPORTANTE!! setto il turno nel mio stato attuale del gioco DOPO AVER FATTO LA sendUpdate()
+        //altrimenti potrei estrarre i miei eventi prima di averli inviati nella routine di ping/controllo degli eventi in coda
+        my_match.setPturn(i_next);
 
         setCursor(new Cursor(Cursor.DEFAULT_CURSOR));
 
@@ -785,7 +861,25 @@ public class UI extends JPanel{
                         e = my_match.getInstance().popEvent();
                         if (e != null) {
                             if (x==0) System.out.println("----------------------------------------");
-                            System.out.println("ho ricevuto un evento di tipox: " + e.event);
+                            System.out.println("ho ricevuto un evento di tipox: " + e.event+" ");
+                            switch(e.event){
+
+                                case PICKUP:
+                                    System.out.println("player ("+e.params.get("player")+") "+my_match.getPlayers().get((Integer) e.params.get("player")).getName());
+                                    break;
+
+                                case THROW:
+                                    System.out.println("player ("+e.params.get("player")+") "+my_match.getPlayers().get((Integer) e.params.get("player")).getName());
+                                    System.out.print("carta ("+e.params.get("card_i")+") ");
+                                    my_match.getPlayers().get((Integer) e.params.get("player")).getHand().get((Integer) e.params.get("card_i")).printCard();
+                                    System.out.println();
+                                    break;
+
+                                case TURN:
+                                    System.out.println("next ("+e.params.get("next")+") "+my_match.getPlayers().get((Integer) e.params.get("next")).getName());
+                                    break;
+
+                            }
                             my_match.execEvent(e);
                             ui.repaint();
                             x=1;
