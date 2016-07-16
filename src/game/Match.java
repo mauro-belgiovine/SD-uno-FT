@@ -196,8 +196,8 @@ public class Match{
 
                 }*/
                                 
-                /******* TODO quando ricevo un GETSTATE, controllo se nella dead_queue esiste ancora quel giocatore: 
-                 * se non esiste e isDead(), scarto l'evento, altrimenti lo ripropago(?) 
+                /******* quando ricevo un GETSTATE, controllo se nella dead_queue esiste ancora quel giocatore:
+                 * se non esiste, scarto l'evento, altrimenti lo ripropago(?)
                  * ******/
                 
                 GameEvent dead;
@@ -332,10 +332,29 @@ public class Match{
                 if(i == getPturn()) //SE E' CRASHATO IL GIOCATORE IN TURNO
                 {
                     handleDeadPlayer(i); //ROUTINE DI AGGIORNAMENTO DELLO STATO DI GIOCO
-                    int old_index = my_index;
+
                     my_index = g.players.indexOf(me); //ottengo il nuovo indice di gioco
+
                     //me.setHand(g.players.get(my_index).getHand()); //TODO CHECK!!
+
                     int i_next = (my_index + 1) % g.getNPlayer(); //decidiamo il giocatore successivo nella lista aggiornata dei giocatori
+
+                    //per tutti i giocatori, a partire da quello successivo, vedo se sono morti o no
+                    // calcolo il successivo finché non ne trovo uno vivo
+                    boolean next_found = false;
+
+                    for(int y = i_next; ((y < g.getNPlayer()) && !next_found); y = ((y + 1) % g.getNPlayer()) ) {
+
+
+                        if ( g.getPlayers().get(i_next).isPlaying()) { //se quello a cui dovrei passare il turno e' ancora vivo
+                            next_found = true;
+                        } else { //se invece quello a cui sto passando il turno e' morto
+
+                            i_next = nextRound(i_next); //calcolo IL NEXT DEL NEXT sul mio stato attuale del gioco (senza morti)
+
+                        }
+
+                    }
 
                     Game gstate = new Game();
 
