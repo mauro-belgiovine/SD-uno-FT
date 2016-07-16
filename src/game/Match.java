@@ -220,6 +220,9 @@ public class Match{
 	                
                 }while(dead != null);
 
+                //aggiorno il mio indice rispetto alla situazione attuale
+                my_index = gstate.players.indexOf(me);
+
                 //setto lo stato attuale come quello ricevuto
                 g = gstate;
 
