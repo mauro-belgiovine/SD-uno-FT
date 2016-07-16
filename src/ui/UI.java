@@ -772,14 +772,25 @@ public class UI extends JPanel{
                 my_match.setMyIndex(my_match.getPlayers().indexOf(my_match.getMe())); //setto il mio nuovo indice
 
                 //**** TODO check!!
-                my_match.getMe().setHand(my_match.getPlayers().get(my_match.getMyIndex()).getHand()); //setto la nuova mano
+                //my_match.getMe().setHand(my_match.getPlayers().get(my_match.getMyIndex()).getHand()); //setto la nuova mano
 
                 int new_next_index = my_match.getPlayers().indexOf(next); //vedo l'indice del next dopo il bilanciamento
 
                 //my_match.setPturn(new_next_index); //setto il NUOVO next nello stato di gioco
 
-                Game gstate = my_match.getGame(); //TODO NON VA BENE! BISOGNA CLONARE L'OGGETTO
-                gstate.setPturn(new_next_index);
+                Game gstate = new Game();
+
+                try{
+
+                    gstate = my_match.getClonedGame();
+                    gstate.setPturn(new_next_index);
+
+                }catch(Exception e){
+                    System.err.println("Clonazione non valida !!!");
+                    e.printStackTrace();
+                }
+
+
 
                 // generiamo l'evento GETSTATE per passare il nostro stato del gioco agli altri giocatori
                 Map<String, Object> map = new HashMap<String, Object>();

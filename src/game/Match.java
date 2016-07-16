@@ -102,8 +102,8 @@ public class Match{
 
 
 
-                //int my_port = 50000+1+my_index;
-                int my_port = 50000;
+                int my_port = 50000+1+my_index;
+                //int my_port = 50000;
 
                 String name = "player."+me.getUuid();
 
@@ -253,8 +253,8 @@ public class Match{
                 String name = "player." + g.players.get(i).getUuid();
                 try {
 
-                    //Registry registry = LocateRegistry.getRegistry(g.players.get(i).getIp(), 50000+1+i);
-                    Registry registry = LocateRegistry.getRegistry(g.players.get(i).getIp(), 50000);
+                    Registry registry = LocateRegistry.getRegistry(g.players.get(i).getIp(), 50000+1+i);
+                    //Registry registry = LocateRegistry.getRegistry(g.players.get(i).getIp(), 50000);
                     r_game = (RemoteGame) registry.lookup(name);
 
                     Queue<GameEvent> queue = instance.getUpdates();
@@ -308,8 +308,8 @@ public class Match{
 
             try {
 
-                //Registry registry = LocateRegistry.getRegistry(g.players.get(i).getIp(), 50000+1+i);
-                Registry registry = LocateRegistry.getRegistry(g.players.get(i).getIp(), 50000);
+                Registry registry = LocateRegistry.getRegistry(g.players.get(i).getIp(), 50000+1+i);
+                //Registry registry = LocateRegistry.getRegistry(g.players.get(i).getIp(), 50000);
                 r_game = (RemoteGame) registry.lookup(name);
 
                 r_game.isAlive();
@@ -331,12 +331,20 @@ public class Match{
                     handleDeadPlayer(i); //ROUTINE DI AGGIORNAMENTO DELLO STATO DI GIOCO
                     int old_index = my_index;
                     my_index = g.players.indexOf(me); //ottengo il nuovo indice di gioco
-                    me.setHand(g.players.get(my_index).getHand()); //TODO CHECK!!
+                    //me.setHand(g.players.get(my_index).getHand()); //TODO CHECK!!
                     int i_next = (my_index + 1) % g.getNPlayer(); //decidiamo il giocatore successivo nella lista aggiornata dei giocatori
 
-                    Game gstate = g;
+                    Game gstate = new Game();
 
-                    gstate.p_turn = i_next; //settiamo il nuovo next nel nuovo stato di gioco
+                    try{
+
+                        gstate = getClonedGame();
+                        gstate.setPturn(i_next);//settiamo il nuovo next nel nuovo stato di gioco
+
+                    }catch(Exception e1){
+                        System.err.println("Clonazione non valida !!!");
+                        e1.printStackTrace();
+                    }
 
                     // generiamo l'evento GETSTATE per passare il nostro stato del gioco agli altri giocatori
                     Map<String, Object> map = new HashMap<String, Object>();
@@ -402,8 +410,8 @@ public class Match{
                     String name = "player." + g.players.get(y).getUuid();
                     try {
 
-                        //Registry registry = LocateRegistry.getRegistry(g.players.get(y).getIp(), 50000+1+y);
-                        Registry registry = LocateRegistry.getRegistry(g.players.get(y).getIp(), 50000);
+                        Registry registry = LocateRegistry.getRegistry(g.players.get(y).getIp(), 50000+1+y);
+                        //Registry registry = LocateRegistry.getRegistry(g.players.get(y).getIp(), 50000);
                         r_game = (RemoteGame) registry.lookup(name);
 
                         r_game.pushDead(evt); //invia la lista degli eventi ad ogni client
@@ -432,6 +440,7 @@ public class Match{
     //public void execEffect(Action a){ g.execEffect(a);}
     public Player getMe(){return me;}
     public Game getGame(){return g;}
+    public Game getClonedGame() throws CloneNotSupportedException {return g.clone();}
     public boolean getShowColors(){return g.getShowColors();}
     public void setShowColors(boolean b){g.setShowColors(b);}
     public int getMyIndex(){return my_index;}

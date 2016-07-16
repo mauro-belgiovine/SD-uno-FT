@@ -5,7 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
 
-public class Game implements Serializable{
+public class Game implements Serializable, Cloneable{
     
     int p_turn;
 
@@ -41,6 +41,10 @@ public class Game implements Serializable{
         finish = false;
         reverse = false;
 
+    }
+
+    public Game clone() throws CloneNotSupportedException {
+        return (Game) super.clone();
     }
     
     
