@@ -102,8 +102,8 @@ public class Match{
 
 
 
-                int my_port = 50000+1+my_index;
-                //int my_port = 50000;
+                //int my_port = 50000+1+my_index;
+                int my_port = 50000;
 
                 String name = "player."+me.getUuid();
 
@@ -253,8 +253,8 @@ public class Match{
                 String name = "player." + g.players.get(i).getUuid();
                 try {
 
-                    Registry registry = LocateRegistry.getRegistry(g.players.get(i).getIp(), 50000+1+i);
-                    //Registry registry = LocateRegistry.getRegistry(g.players.get(i).getIp(), 50000);
+                    //Registry registry = LocateRegistry.getRegistry(g.players.get(i).getIp(), 50000+1+i);
+                    Registry registry = LocateRegistry.getRegistry(g.players.get(i).getIp(), 50000);
                     r_game = (RemoteGame) registry.lookup(name);
 
                     Queue<GameEvent> queue = instance.getUpdates();
@@ -308,8 +308,8 @@ public class Match{
 
             try {
 
-                Registry registry = LocateRegistry.getRegistry(g.players.get(i).getIp(), 50000+1+i);
-                //Registry registry = LocateRegistry.getRegistry(g.players.get(i).getIp(), 50000);
+                //Registry registry = LocateRegistry.getRegistry(g.players.get(i).getIp(), 50000+1+i);
+                Registry registry = LocateRegistry.getRegistry(g.players.get(i).getIp(), 50000);
                 r_game = (RemoteGame) registry.lookup(name);
 
                 r_game.isAlive();
@@ -410,8 +410,8 @@ public class Match{
                     String name = "player." + g.players.get(y).getUuid();
                     try {
 
-                        Registry registry = LocateRegistry.getRegistry(g.players.get(y).getIp(), 50000+1+y);
-                        //Registry registry = LocateRegistry.getRegistry(g.players.get(y).getIp(), 50000);
+                        //Registry registry = LocateRegistry.getRegistry(g.players.get(y).getIp(), 50000+1+y);
+                        Registry registry = LocateRegistry.getRegistry(g.players.get(y).getIp(), 50000);
                         r_game = (RemoteGame) registry.lookup(name);
 
                         r_game.pushDead(evt); //invia la lista degli eventi ad ogni client
