@@ -661,7 +661,7 @@ public class UI extends JPanel{
             // calcolo il successivo finché non ne trovo uno vivo
             boolean next_found = false;
 
-            for(int i = i_next; ((i < my_match.getNPlayer()) && !next_found); i = ((i + 1) % my_match.getNPlayer()) ) {
+            for(int i = 0; ((i < my_match.getNPlayer()) && !next_found); i++ ) {
 
 
                 if (my_match.getPlayers().get(i_next).isPlaying()) { //se quello a cui dovrei passare il turno e' ancora vivo

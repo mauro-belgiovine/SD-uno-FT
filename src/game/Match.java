@@ -343,14 +343,14 @@ public class Match{
                     // calcolo il successivo finché non ne trovo uno vivo
                     boolean next_found = false;
 
-                    for(int y = i_next; ((y < g.getNPlayer()) && !next_found); y = ((y + 1) % g.getNPlayer()) ) {
+                    for(int y = 0; ((y < g.getNPlayer()) && !next_found); y++ ) {
 
 
-                        if ( g.getPlayers().get(y).isPlaying()) { //se quello a cui dovrei passare il turno e' ancora vivo
+                        if ( g.getPlayers().get(i_next).isPlaying()) { //se quello a cui dovrei passare il turno e' ancora vivo
                             next_found = true;
                         } else { //se invece quello a cui sto passando il turno e' morto
 
-                            i_next = nextRound(y); //calcolo IL NEXT DEL NEXT sul mio stato attuale del gioco (senza morti)
+                            i_next = nextRound(i_next); //calcolo IL NEXT DEL NEXT sul mio stato attuale del gioco (senza morti)
 
                         }
 
