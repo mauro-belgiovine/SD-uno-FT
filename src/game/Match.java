@@ -331,13 +331,9 @@ public class Match{
 
                 if(i == getPturn()) //SE E' CRASHATO IL GIOCATORE IN TURNO
                 {
-                    handleDeadPlayer(i); //ROUTINE DI AGGIORNAMENTO DELLO STATO DI GIOCO
-
-                    my_index = g.players.indexOf(me); //ottengo il nuovo indice di gioco
-
                     //me.setHand(g.players.get(my_index).getHand()); //TODO CHECK!!
 
-                    int i_next = (my_index + 1) % g.getNPlayer(); //decidiamo il giocatore successivo nella lista aggiornata dei giocatori
+                    int i_next = nextRound(getPturn()); //vediamo chi sarebbe il giocatore successivo nella lista dei giocatori
 
                     //per tutti i giocatori, a partire da quello successivo, vedo se sono morti o no
                     // calcolo il successivo finché non ne trovo uno vivo
@@ -356,12 +352,21 @@ public class Match{
 
                     }
 
+                    //salvo il player successivo per calcolarne il nuovo indice dopo l'aggiornamento della lista dei giocatori
+                    Player next = g.players.get(i_next);
+
+                    handleDeadPlayer(i); //rimuovo il giocatore di turno dalla lista dei giocatori
+
+                    my_index = g.players.indexOf(me); //ottengo il nuovo indice di gioco
+
+                    int new_next_index = g.players.indexOf(next); //vedo l'indice del next dopo il bilanciamento
+                    
                     Game gstate = new Game();
 
                     try{
 
                         gstate = getClonedGame();
-                        gstate.setPturn(i_next);//settiamo il nuovo next nel nuovo stato di gioco
+                        gstate.setPturn(new_next_index);//settiamo il nuovo next nel nuovo stato di gioco
 
                     }catch(Exception e1){
                         System.err.println("Clonazione non valida !!!");
@@ -371,9 +376,9 @@ public class Match{
                     // generiamo l'evento GETSTATE per passare il nostro stato del gioco agli altri giocatori
                     Map<String, Object> map = new HashMap<String, Object>();
                     map.put("state", gstate);
-                    GameEvent evt = new GameEvent(Event.GETSTATE, map);
+                    GameEvent gs_evt = new GameEvent(Event.GETSTATE, map);
                     try {
-                        instance.pushEvent(evt);
+                        instance.pushEvent(gs_evt);
                         sendUpdates();
                     } catch (RemoteException e1) {
                         e1.printStackTrace();
