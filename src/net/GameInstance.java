@@ -136,4 +136,14 @@ public class GameInstance implements RemoteGame {
     	return dead_queue.poll();
     }
 
+    public boolean anyDead(){
+
+        boolean out = false;
+
+        if(dead_queue.size() > 0) out = true;
+
+        return out;
+
+    }
+
 }

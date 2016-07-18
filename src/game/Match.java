@@ -360,7 +360,7 @@ public class Match{
                     my_index = g.players.indexOf(me); //ottengo il nuovo indice di gioco
 
                     int new_next_index = g.players.indexOf(next); //vedo l'indice del next dopo il bilanciamento
-                    
+
                     Game gstate = new Game();
 
                     try{
@@ -396,6 +396,77 @@ public class Match{
             }
         }
         return out;
+    }
+
+    public Game handleCrash(int i_next){
+
+        GameEvent dead = instance.popDead();
+
+        do{
+
+            execEvent(dead); //segno nel mio stato di gioco chi e' morto
+
+            dead = instance.popDead(); //estraggo il prossimo
+
+        }while(dead != null);
+
+        //per tutti i giocatori, a partire da quello successivo, vedo se sono morti o no
+        // calcolo il successivo finché non ne trovo uno vivo
+        boolean next_found = false;
+
+        for(int i = 0; ((i < getNPlayer()) && !next_found); i++ ) {
+
+
+            if (getPlayers().get(i_next).isPlaying()) { //se quello a cui dovrei passare il turno e' ancora vivo
+                next_found = true;
+            } else { //se invece quello a cui sto passando il turno e' morto
+
+                i_next = nextRound(i_next); //calcolo IL NEXT DEL NEXT sul mio stato attuale del gioco (senza morti)
+
+            }
+
+        }
+
+        //salvo il player successivo per calcolarne il nuovo indice dopo l'aggiornamento della lista dei giocatori
+        Player next = getPlayers().get(i_next);
+
+        for(int i = 0; i < getNPlayer(); i++){ //scorro la lista dei giocatori per eliminare quelli morti
+
+            if(!getPlayers().get(i).isPlaying())  //se ho segnato il giocatore come morto
+
+                handleDeadPlayer(i); // elimino dal gioco il player morto
+
+        }
+
+        my_index = getPlayers().indexOf(me); //setto il mio nuovo indice
+
+        int new_next_index = getPlayers().indexOf(next); //vedo l'indice del next dopo il bilanciamento
+
+        Game gstate = new Game();
+
+        try{
+
+            gstate = getClonedGame();
+            gstate.setPturn(new_next_index);
+
+        }catch(Exception e){
+            System.err.println("Clonazione non valida !!!");
+            e.printStackTrace();
+        }
+
+        // generiamo l'evento GETSTATE per passare il nostro stato del gioco agli altri giocatori
+        Map<String, Object> map = new HashMap<String, Object>();
+        map.put("state", gstate);
+        GameEvent gs_evt = new GameEvent(Event.GETSTATE, map);
+        //setto GETSTATE AL POSTO DI TURN!! e tutti riceveranno gli eventi giocati, ma riprenderanno dallo stato del gioco ri-bilanciato
+        try {
+            instance.pushEvent(gs_evt);
+        } catch (RemoteException e1) {
+            e1.printStackTrace();
+        }
+
+        //i_next = new_next_index; //assegnamo new_next_index a i_next per settarlo nel nostro stato dopo il ribilanciamento
+        return gstate;
     }
 
     public void handleDeadPlayer(int i){
