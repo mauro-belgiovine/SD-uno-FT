@@ -400,6 +400,8 @@ public class Match{
 
     public Game handleCrash(int i_next){
 
+        System.out.println("Gestione dei crash...");
+
         GameEvent dead = instance.popDead();
 
         do{
