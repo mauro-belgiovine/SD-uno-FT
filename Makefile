@@ -61,7 +61,7 @@ CLASSES = \
 	$(SRC_DIR)/$(NET_DIR)/GameInstance.java \
 	$(SRC_DIR)/$(GAME_DIR)/Lobby.java \
 	$(SRC_DIR)/$(GAME_DIR)/Match.java \
-	$(SRC_DIR)/$(UI_DIR)/UI.java
+	$(SRC_DIR)/$(UI_DIR)/Gui.java
 
 
 
