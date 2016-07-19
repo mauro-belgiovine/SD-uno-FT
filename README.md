@@ -12,4 +12,4 @@ $ java game.Lobby
 
 and start the clients like this
 
-$ java gui.UI < username > < lobby ip >
+$ java gui.Gui < username > < lobby ip >

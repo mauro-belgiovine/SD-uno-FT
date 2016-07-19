@@ -26,7 +26,7 @@ public class Match{
     Scanner scan;
     int my_index;
 
-    boolean local = false; //debug
+    boolean local = true; //debug
 
     public boolean tryBind(Player p, String host){
 
@@ -121,7 +121,10 @@ public class Match{
 
                 g = r_game.getState();
 
-                me.setHand(g.getPHand(me)); //prendo le mie carte dallo stato del gioco
+                //aggiorno il riferimento di me dallo stato del gioco
+                me = g.players.get(my_index);
+
+                me.setHand(g.getPHand(me)); //prendo le mie carte dallo stato del gioco TODO: non serve se aggiorno riferimento
 
 
             } catch (Exception e) {
@@ -202,10 +205,8 @@ public class Match{
                 //aggiorno il mio indice rispetto alla situazione attuale
                 my_index = gstate.players.indexOf(me);
 
-                System.out.println("vecchio me "+me.toString());
                 //aggiorno il riferimento di me dallo stato del gioco
                 me = gstate.players.get(my_index);
-                System.out.println("nuovo me "+me.toString());
 
                 //setto lo stato attuale come quello ricevuto
                 g = gstate;
