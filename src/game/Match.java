@@ -26,7 +26,7 @@ public class Match{
     Scanner scan;
     int my_index;
 
-    boolean rebalance = false;
+    boolean local = true; //debug
 
     public boolean tryBind(Player p, String host){
 
@@ -102,8 +102,9 @@ public class Match{
 
 
 
-                //int my_port = 50000+1+my_index;
-                int my_port = 50000;
+                int my_port;
+                if(local) my_port = 50000+1+my_index;
+                else my_port = 50000;
 
                 String name = "player."+me.getUuid();
 
@@ -177,24 +178,6 @@ public class Match{
                 //devo aggiornare lo stato di gioco dal balancer
 
                 Game gstate = (Game) e.params.get("state");
-
-                /*int p_bal = (Integer) e.params.get("balancer");
-                String name = "player." + g.players.get(p_bal).getUuid();
-                try {
-
-                    Registry registry = LocateRegistry.getRegistry(g.players.get(p_bal).getIp(), 50000+1+p_bal);
-                    //Registry registry = LocateRegistry.getRegistry(g.players.get(p_bal).getIp(), 50000);
-                    r_game = (RemoteGame) registry.lookup(name);
-
-                    g = r_game.getState();
-                    my_index = g.players.indexOf(me);
-                    me.setHand(g.players.get(my_index).getHand());
-
-                } catch (Exception ex) {
-                    System.err.println("sendUpdate() exception: ");
-                    ex.printStackTrace();
-
-                }*/
                                 
                 /******* quando ricevo un GETSTATE, controllo se nella dead_queue esiste ancora quel giocatore:
                  * se non esiste, scarto l'evento, altrimenti lo ripropago(?)
@@ -222,6 +205,9 @@ public class Match{
 
                 //aggiorno il mio indice rispetto alla situazione attuale
                 my_index = gstate.players.indexOf(me);
+
+                //aggiorno il riferimento di me dallo stato del gioco
+                me = gstate.players.get(my_index);
 
                 //setto lo stato attuale come quello ricevuto
                 g = gstate;
@@ -256,8 +242,9 @@ public class Match{
                 String name = "player." + g.players.get(i).getUuid();
                 try {
 
-                    //Registry registry = LocateRegistry.getRegistry(g.players.get(i).getIp(), 50000+1+i);
-                    Registry registry = LocateRegistry.getRegistry(g.players.get(i).getIp(), 50000);
+                    Registry registry;
+                    if(local) registry = LocateRegistry.getRegistry(g.players.get(i).getIp(), 50000+1+i);
+                    else registry = LocateRegistry.getRegistry(g.players.get(i).getIp(), 50000);
                     r_game = (RemoteGame) registry.lookup(name);
 
                     Queue<GameEvent> queue = instance.getUpdates();
@@ -276,30 +263,6 @@ public class Match{
 
     }
 
-    /*public void waitForMyTurn() {
-        if (!isMyTurn()) {
-
-            int p_turn = getPturn(); //prendo giocatore attuale
-            String name = "player." + g.players.get(p_turn).getUuid();
-
-            try {
-
-                //Registry registry = LocateRegistry.getRegistry(g.players.get(p_turn).getIp(), 50000+1+p_turn);
-                Registry registry = LocateRegistry.getRegistry(g.players.get(p_turn).getIp(), 50000);
-                r_game = (RemoteGame) registry.lookup(name);
-
-                r_game.waitEvent();
-
-
-            } catch (Exception e) {
-                System.err.println("waitForMyTurn() exception:");
-                e.printStackTrace();
-
-            }
-
-        }
-    }*/
-
     public boolean checkIsAlive(int i){
 
         boolean out = true;
@@ -311,8 +274,9 @@ public class Match{
 
             try {
 
-                //Registry registry = LocateRegistry.getRegistry(g.players.get(i).getIp(), 50000+1+i);
-                Registry registry = LocateRegistry.getRegistry(g.players.get(i).getIp(), 50000);
+                Registry registry;
+                if(local) registry = LocateRegistry.getRegistry(g.players.get(i).getIp(), 50000+1+i);
+                else registry = LocateRegistry.getRegistry(g.players.get(i).getIp(), 50000);
                 r_game = (RemoteGame) registry.lookup(name);
 
                 r_game.isAlive();
@@ -437,8 +401,9 @@ public class Match{
                     String name = "player." + g.players.get(y).getUuid();
                     try {
 
-                        //Registry registry = LocateRegistry.getRegistry(g.players.get(y).getIp(), 50000+1+y);
-                        Registry registry = LocateRegistry.getRegistry(g.players.get(y).getIp(), 50000);
+                        Registry registry;
+                        if(local)  registry = LocateRegistry.getRegistry(g.players.get(y).getIp(), 50000+1+y);
+                        else registry = LocateRegistry.getRegistry(g.players.get(y).getIp(), 50000);
                         r_game = (RemoteGame) registry.lookup(name);
 
                         r_game.pushDead(evt); //invia la lista degli eventi ad ogni client
