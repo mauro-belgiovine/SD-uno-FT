@@ -85,7 +85,7 @@ public class Gui extends JPanel{
                         setCursor(denied);
 
                         //generiamo l'evento THROW
-                        Map<String, Object> m = new HashMap<String, Object>();
+                        /*Map<String, Object> m = new HashMap<String, Object>();
                         m.put("player", my_match.getMyIndex());
                         m.put("card_i", card_index);
                         GameEvent evt = new GameEvent(Event.THROW, m);
@@ -93,7 +93,7 @@ public class Gui extends JPanel{
                             my_match.getInstance().pushEvent(evt);
                         } catch (RemoteException e1) {
                             e1.printStackTrace();
-                        }
+                        }*/
 
                         // se il giocatore ha ancora carte in mano
                         if(my_match.getMe().getHand().size()>0) {
@@ -134,14 +134,14 @@ public class Gui extends JPanel{
                         setCursor(denied);
 
                         // generiamo l'evento PICKUP
-                        Map<String, Object> m = new HashMap<String, Object>();
+                        /*Map<String, Object> m = new HashMap<String, Object>();
                         m.put("player", my_match.getMyIndex());
                         GameEvent evt = new GameEvent(net.Event.PICKUP, m);
                         try {
                             my_match.getInstance().pushEvent(evt); //aggiungi questo evento alla coda
                         } catch (RemoteException e1) {
                             e1.printStackTrace();
-                        }
+                        }*/
 
                         if (checkPlayableHand(my_match.getMe())) repaint();
                         else goToNextRound();
@@ -154,14 +154,14 @@ public class Gui extends JPanel{
                         my_match.setShowColors(false);
 
                         // generiamo l'evento di EXTRA_COL
-                        Map<String, Object> m_extra = new HashMap<String, Object>();
+                        /*Map<String, Object> m_extra = new HashMap<String, Object>();
                         m_extra.put("extra", my_match.getExtraColor());
                         GameEvent e_extra = new GameEvent(Event.EXTRA_COL, m_extra);
                         try {
                             my_match.getInstance().pushEvent(e_extra);
                         } catch (RemoteException e1) {
                             e1.printStackTrace();
-                        }
+                        }*/
 
                         goToNextRound();
                     }
@@ -645,11 +645,33 @@ public class Gui extends JPanel{
         if(!my_match.getInstance().anyDead()){ //se non ci sono morti
 
             //generiamo l'evento TURN
-            Map<String, Object> m = new HashMap<String, Object>();
+            /*Map<String, Object> m = new HashMap<String, Object>();
             m.put("next", i_next);
             GameEvent evt = new GameEvent(Event.TURN, m);
             try {
                 my_match.getInstance().pushEvent(evt);
+            } catch (RemoteException e1) {
+                e1.printStackTrace();
+            }*/
+
+            Game gstate = new Game();
+
+            try{
+
+                gstate = my_match.getClonedGame();
+                gstate.setPturn(i_next);
+
+            }catch(Exception e){
+                System.err.println("Clonazione non valida !!!");
+                e.printStackTrace();
+            }
+
+            Map<String, Object> map = new HashMap<String, Object>();
+            map.put("state", gstate);
+            GameEvent gs_evt = new GameEvent(Event.GETSTATE, map);
+            //setto GETSTATE AL POSTO DI TURN!! e tutti riceveranno gli eventi giocati, ma riprenderanno dallo stato del gioco ri-bilanciato
+            try {
+                my_match.getInstance().pushEvent(gs_evt);
             } catch (RemoteException e1) {
                 e1.printStackTrace();
             }

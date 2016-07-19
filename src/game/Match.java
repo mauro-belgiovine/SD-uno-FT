@@ -26,7 +26,7 @@ public class Match{
     Scanner scan;
     int my_index;
 
-    boolean local = false; //debug
+    boolean local = false; //true for localhost debug
 
     public boolean tryBind(Player p, String host){
 
