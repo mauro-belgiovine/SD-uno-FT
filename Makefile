@@ -14,7 +14,7 @@ SRC_DIR = src
 GAME_DIR = game
 NET_DIR = net
 OVERLAY_DIR = overlay
-UI_DIR = ui
+UI_DIR = gui
 
 #
 # Clear any default targets for building .class files from .java files; we

@@ -1,4 +1,4 @@
-package ui;
+package gui;
 
 import game.*;
 import game.Action;
@@ -15,11 +15,12 @@ import java.rmi.RemoteException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Date;
 
 import static java.lang.Thread.sleep;
 
 // cd Documents/workspace/SD-uno/out/production/SD-uno/
-public class UI extends JPanel{
+public class Gui extends JPanel{
 
     static Match my_match;
 
@@ -28,6 +29,8 @@ public class UI extends JPanel{
     private boolean picked=false, played=false;
     private boolean playable=false;
     private game.Color chosen_color= game.Color.NONE;
+    boolean endGameGUI = false;
+
     //private Player me = my_match.getMe(); // giocatore locale
 
     //List<Player> players = my_match.getPlayers(); // lista giocatori
@@ -48,7 +51,7 @@ public class UI extends JPanel{
     private boolean isMyTurn(){return (my_match.getMyIndex()==my_match.getPturn());}
     //public void UiRepaint(){repaint();}
 
-    public UI() {
+    public Gui() {
 
         // Listener per le azioni di click con cursore del mouse
         addMouseListener(new MouseAdapter() {
@@ -215,14 +218,21 @@ public class UI extends JPanel{
     // INPUT  --> il java graphic
     // COSA FA--> funzione principale che si occupa di disegnare tutto, richiamando tutte le altre funzioni
     public void paintComponent(Graphics g) {
-        //players = my_match.getPlayers();
-	    //players_size = players.size();
+
+    	if(endGameGUI) {
+		try {sleep(5000);
+		System.exit(0);
+		}
+		catch (Exception e){}
+	}
+
 
         super.paintComponent(g);
         String name = my_match.getMe().getName();
         int ln = name.length();
         Font f = new Font("Serif Plain", Font.BOLD, 15);
         g.setFont(f);
+
 
         // 3 sezioni principali
         this.setBackground(new Color(0,76,153));
@@ -245,6 +255,8 @@ public class UI extends JPanel{
         if (!my_match.getReverse()) g.drawImage(clockwise,20,185,45,45,this);
         else g.drawImage(cclockwise,20,185,45,45,this);
 
+	
+
         // se non e' il mio turno, applico un filtro oscurato alle carte in mano
         if(!isMyTurn()) {
             g.setColor(new Color(64,64,64,100));
@@ -258,11 +270,8 @@ public class UI extends JPanel{
         if(my_match.getExtraColor() != game.Color.NONE) drawExtraColor(g);
 
         // se la partita è finita
-        if ( my_match.getGame().isFinish() ) {
-            if(my_match.isMyTurn()) JOptionPane.showMessageDialog(null, "Hai vinto");
-            else JOptionPane.showMessageDialog(null, "Hai perso");
-            System.exit(0);
-        }
+        if ( my_match.getGame().isFinish() ) endGameNotify(g);
+	
 
     }
 
@@ -735,107 +744,6 @@ public class UI extends JPanel{
         repaint();
     }
 
-/*
-    private void goToNextRound(){
-
-        my_match.getGame().getPlayers().get(my_match.getMyIndex()).setHand(my_match.getMe().getHand()); //aggiorno la mia mano sullo stato del gioco
-
-        played = picked = false;
-
-        int i_next = my_match.nextRound(my_match.getPturn()); //calcolo next round sul mio stato attuale del gioco (senza morti)
-        my_match.setSkip(false);
-
-        GameEvent dead;
-
-        dead = my_match.getInstance().popDead();
-
-        if(dead == null){ //se non ci sono morti
-
-            //generiamo l'evento TURN
-            Map<String, Object> m = new HashMap<String, Object>();
-            m.put("next", i_next);
-            GameEvent evt = new GameEvent(Event.TURN, m);
-            try {
-                my_match.getInstance().pushEvent(evt);
-            } catch (RemoteException e1) {
-                e1.printStackTrace();
-            }
-
-        }else{ //ci sono morti
-
-            do{
-
-                my_match.execEvent(dead); //segno nel mio stato di gioco chi e' morto
-                int dead_index = (Integer) dead.params.get("player");
-
-                // System.out.print("il next sarebbe ")
-
-                if (my_match.getPlayers().get(my_match.getPturn()).isPlaying()){ //se quello a cui dovrei passare il turno e' ancora vivo
-
-                }else{ //se invece quello a cui sto passando il turno e' morto
-
-                    i_next = my_match.nextRound(i_next); //calcolo IL NEXT DEL NEXT sul mio stato attuale del gioco (senza morti)
-
-                }
-
-                Player next = my_match.getPlayers().get(i_next); //salvo il player successivo
-
-                my_match.handleDeadPlayer(dead_index); // elimino dal gioco il player morto
-
-                my_match.setMyIndex(my_match.getPlayers().indexOf(my_match.getMe())); //setto il mio nuovo indice
-
-                //**** TODO check!!
-                //my_match.getMe().setHand(my_match.getPlayers().get(my_match.getMyIndex()).getHand()); //setto la nuova mano
-
-                int new_next_index = my_match.getPlayers().indexOf(next); //vedo l'indice del next dopo il bilanciamento
-
-                //my_match.setPturn(new_next_index); //setto il NUOVO next nello stato di gioco
-
-                Game gstate = new Game();
-
-                try{
-
-                    gstate = my_match.getClonedGame();
-                    gstate.setPturn(new_next_index);
-
-                }catch(Exception e){
-                    System.err.println("Clonazione non valida !!!");
-                    e.printStackTrace();
-                }
-
-                // generiamo l'evento GETSTATE per passare il nostro stato del gioco agli altri giocatori
-                Map<String, Object> map = new HashMap<String, Object>();
-                map.put("state", gstate);
-                GameEvent gs_evt = new GameEvent(Event.GETSTATE, map);
-                //setto GETSTATE AL POSTO DI TURN!! e tutti riceveranno gli eventi giocati, ma riprenderanno dallo stato del gioco ri-bilanciato
-                try {
-                    (my_match.getInstance()).pushEvent(gs_evt);
-                } catch (RemoteException e1) {
-                    e1.printStackTrace();
-                }
-
-                i_next = new_next_index; //assegnamo new_next_index a i_next per settarlo nel nostro stato dopo il ribilanciamento
-
-                dead = my_match.getInstance().popDead();
-
-            }while(dead != null);
-        }
-
-        // aggiornamento dello stato per gli altri giocatori
-        try {
-            my_match.sendUpdates();
-        } catch (RemoteException e1) {
-            e1.printStackTrace();
-        }
-
-        //IMPORTANTE!! setto il turno nel mio stato attuale del gioco DOPO AVER FATTO LA sendUpdate()
-        //altrimenti potrei estrarre i miei eventi prima di averli inviati nella routine di ping/controllo degli eventi in coda
-        my_match.setPturn(i_next);
-
-        setCursor(new Cursor(Cursor.DEFAULT_CURSOR));
-
-        repaint();
-    }*/
 
     // INPUT --> giocatore attuale
     // OUTPUT --> true se almeno una carta del player attuale e' giocabile
@@ -852,6 +760,32 @@ public class UI extends JPanel{
     }
 
 
+    // COSA FA --> mostra un messaggio che indica la vittoria/sconfitta del giocatore 
+    private void endGameNotify(Graphics gr) {
+
+	// disabilita il resto del gioco f
+            gr.setColor(new Color(64,64,64,160));
+        gr.fillRect(10,10,745,560);
+
+	// disegno il contenitore della scritta
+  	    gr.setColor(new Color(64,64,64));
+        gr.fillRoundRect(295,260,180,100,10,10);
+            gr.setColor(new Color(153,204,255));
+        gr.fillRoundRect(296,261,178,98,10,10);
+
+	// disegno la scritta
+	Font f = new Font("Serif Plain", Font.BOLD, 20);
+	gr.setFont(f);
+	gr.setColor(new Color(0,76,153));
+        String st = "Hai vinto!";
+	if (! my_match.isMyTurn()) st="Hai perso!";
+        gr.drawString(st,328,318);
+
+	endGameGUI = true;
+	repaint();
+    }
+
+
     /////////////////////////////////////////////////////////////////
 
     public static void main(String[] args) throws InterruptedException{
@@ -864,11 +798,12 @@ public class UI extends JPanel{
         //fr.setLayout(new BorderLayout());
         fr.setIconImage(Toolkit.getDefaultToolkit().getImage("cards/400.png"));
         fr.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        UI ui = new UI();
+        Gui ui = new Gui();
         fr.add(ui);
-        fr.setSize(765,600);
+        fr.setSize(770,620);
         fr.setVisible(true);
         int x = 0;
+  
             do {
 
                 if (!my_match.isMyTurn()) {
@@ -883,6 +818,7 @@ public class UI extends JPanel{
                         e = my_match.getInstance().popEvent();
                         if (e != null) {
                             if (x==0) System.out.println("----------------------------------------");
+				
                             System.out.println("ho ricevuto un evento di tipox: " + e.event+" ");
                             switch(e.event){
 
@@ -890,14 +826,14 @@ public class UI extends JPanel{
                                     System.out.println("player ("+e.params.get("player")+") "+my_match.getPlayers().get((Integer) e.params.get("player")).getName());
                                     break;
 
-                                case THROW:
+                                case THROW:	
                                     System.out.println("player ("+e.params.get("player")+") "+my_match.getPlayers().get((Integer) e.params.get("player")).getName());
                                     System.out.print("carta ("+e.params.get("card_i")+") ");
                                     my_match.getPlayers().get((Integer) e.params.get("player")).getHand().get((Integer) e.params.get("card_i")).printCard();
                                     System.out.println();
                                     break;
 
-                                case TURN:
+                                case TURN:	
                                     System.out.println("next ("+e.params.get("next")+") "+my_match.getPlayers().get((Integer) e.params.get("next")).getName());
                                     break;
 

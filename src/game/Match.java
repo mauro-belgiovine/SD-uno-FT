@@ -178,16 +178,12 @@ public class Match{
                 //devo aggiornare lo stato di gioco dal balancer
 
                 Game gstate = (Game) e.params.get("state");
-                                
-                /******* quando ricevo un GETSTATE, controllo se nella dead_queue esiste ancora quel giocatore:
-                 * se non esiste, scarto l'evento, altrimenti lo ripropago(?)
-                 * ******/
                 
                 GameEvent dead;
                 
                 do{
                 	
-                	dead = instance.popDead();
+                	dead = instance.popDead(); //estraggo gli eventi dead ricevuti nella mia coda, quando li ho
                 
 	                if(dead != null){
 	                	
