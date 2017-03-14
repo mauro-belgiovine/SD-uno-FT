@@ -685,6 +685,7 @@ public class Gui extends JPanel{
 	    	do{
 
 	    		my_match.execEvent(dead); //segno nel mio stato di gioco chi e' morto
+	    		System.out.println("Sto gestendo la morte di "+dead.params.get("player"));
 
                 dead = my_match.getInstance().popDead(); //estraggo il prossimo
 
@@ -825,6 +826,8 @@ public class Gui extends JPanel{
         fr.setSize(770,620);
         fr.setVisible(true);
         int x = 0;
+        
+        int monitor_temp = -1; // variabile per l'indice giocatore da monitorare temporaneamente
   
             do {
 
@@ -844,6 +847,7 @@ public class Gui extends JPanel{
                             System.out.println("ho ricevuto un evento di tipox: " + e.event+" ");
                             switch(e.event){
 
+                                /*
                                 case PICKUP:
                                     System.out.println("player ("+e.params.get("player")+") "+my_match.getPlayers().get((Integer) e.params.get("player")).getName());
                                     break;
@@ -858,6 +862,11 @@ public class Gui extends JPanel{
                                 case TURN:	
                                     System.out.println("next ("+e.params.get("next")+") "+my_match.getPlayers().get((Integer) e.params.get("next")).getName());
                                     break;
+                                */
+                                
+                                case GETSTATE:
+                                	//quando arriva un evento GETSTATE (cambio dello stato del gioco), resettiamo l'indice del giocatore monitorato temporaneamente e riprendiamo la routine normale di monitoraggio
+                                	monitor_temp = -1;
 
                             }
                             my_match.execEvent(e);
@@ -868,8 +877,85 @@ public class Gui extends JPanel{
                     x=0;
 
                 }
+                
+                int monitor_i;
+                
+                if (monitor_temp < 0){ // se non c'e' nessun monitoraggio temporaneo
+                	monitor_i = (my_match.getMyIndex() + 1) % my_match.getNPlayer(); //prendo il mio successivo
+                }else{
+                	monitor_i = monitor_temp;
+                }
+                
+                
+                // TODO: caso crash giocatore prima del giocatore attivo e poi del giocatore attivo:
+                //	1 - quando crasha il giocatore prima, quello che lo stava monitorando inizia correttamente a monitorare quello successivo
+                // 	2 - poi, quando crasha il giocatore attivo, gestisce male un evento DEAD (probabilmente perche' il giocatore non e' piu' nello stato del gioco quando riceve GETSTATE)
+                
+                //GameInstance: ho ricevuto un evento DEAD
+		//GameInstance: ho ricevuto un evento DEAD
+		//notifyDead() exception: 
+		//java.rmi.ConnectException: Connection refused to host: 130.136.4.146; nested exception is: 
+		//	java.net.ConnectException: Connection refused
+		//	at sun.rmi.transport.tcp.TCPEndpoint.newSocket(TCPEndpoint.java:619)
+		//	at sun.rmi.transport.tcp.TCPChannel.createConnection(TCPChannel.java:216)
+		//	at sun.rmi.transport.tcp.TCPChannel.newConnection(TCPChannel.java:202)
+		//	at sun.rmi.server.UnicastRef.newCall(UnicastRef.java:341)
+		//	at sun.rmi.registry.RegistryImpl_Stub.lookup(Unknown Source)
+		//	at game.Match.notifyDead(Match.java:410)
+		//	at game.Match.execEvent(Match.java:197)
+		//	at gui.Gui.main(Gui.java:871)
+		//Caused by: java.net.ConnectException: Connection refused
+		// ...	
+                
 
-                if(!my_match.checkIsAlive((my_match.getMyIndex() + 1) % my_match.getNPlayer())){
+                if(!my_match.checkIsAlive(monitor_i)){
+                
+                	//NOTE: ho gia' inviato il DEAD (se il player morto non e' quello in turno)
+                	
+                	if(monitor_i == my_match.getPturn()){
+                		
+                		// se il giocatore morto e' quello in turno, sono io a modificare il mio stato del gioco e poi lo invio agli altri
+                		my_match.handleDeadInTurn(monitor_i);
+                		// i giocatori riceveranno direttamente lo stato del gioco aggiornato da me, senza considerare eventuali morti prima di quello in turno (che ho gestito io)
+                	
+                	}else{
+                
+	                	// quando il giocatore che sto controllando muore, inizio a monitorarne un altro
+	                	int i_next = (monitor_i + 1) % my_match.getNPlayer(); //vediamo chi sarebbe il giocatore successivo nella lista dei giocatori
+	                    
+						//per tutti i giocatori, a partire da quello successivo, vedo se sono morti o no
+						// calcolo il successivo finché non ne trovo uno vivo
+						boolean next_found = false;
+						
+						Game g = my_match.getGame();
+			
+						for(int y = 0; ((y < g.getNPlayer()) && !next_found); y++ ) {
+			
+			
+							if ( g.getPlayers().get(i_next).isPlaying()) { //se quello a cui dovrei passare il turno e' ancora vivo
+							
+							    next_found = true;
+							    
+							} else { //se invece quello a cui sto passando il turno e' morto
+			
+							    i_next = (monitor_i + 1) % my_match.getNPlayer(); //calcolo IL NEXT DEL NEXT sul mio stato attuale del gioco (senza morti)
+			
+							}
+			
+						}
+						
+						//my_match.handleDeadPlayer(monitor_i); //rimuovo il giocatore di turno dalla lista dei giocatori
+			
+						System.out.println("Dovrei iniziare a monitorare "+i_next);
+						
+						monitor_temp = i_next;
+                	}
+					
+					
+				
+					
+					
+					//gui
                 	ui.repaint();
                 }
 

@@ -129,7 +129,7 @@ public class GameInstance implements RemoteGame {
 
     public void pushDead(GameEvent e) throws RemoteException{
         dead_queue.add(e); // save locally the dead event
-        System.out.println("GameInstance: ho ricevuto un evento DEAD");
+        System.out.println("GameInstance: ho ricevuto un evento DEAD "+e.params.get("player"));
     }
     
     public GameEvent popDead() {
