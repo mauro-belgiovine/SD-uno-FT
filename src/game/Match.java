@@ -428,23 +428,6 @@ public class Match{
 
         }
 
-        /*handleDeadPlayer(i); //rimuovo il giocatore di turno dalla lista dei giocatori
-        
-        // prima di fare la sendUpdates(), gestisco eventuali morti oltre a quello in turno
-        GameEvent dead;
-
-	    dead = getInstance().popDead();
-
-	    	do{
-
-	    		//execEvent(dead); //segno nel mio stato di gioco chi e' morto
-	    		System.out.println("Sto gestendo la morte di "+dead.params.get("player"));
-	    		handleDeadPlayer((int) g.players.indexOf(dead.params.get("player_obj")));
-
-	        dead = getInstance().popDead(); //estraggo il prossimo
-
-	    }while(dead != null);*/
-
         my_index = g.players.indexOf(me); //ottengo il nuovo indice di gioco
 
         int new_next_index = g.players.indexOf(next); //vedo l'indice del next dopo il bilanciamento

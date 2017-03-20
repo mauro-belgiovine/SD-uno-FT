@@ -12,6 +12,7 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseMotionAdapter;
 import java.rmi.RemoteException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -710,15 +711,23 @@ public class Gui extends JPanel{
 
             //salvo il player successivo per calcolarne il nuovo indice dopo l'aggiornamento della lista dei giocatori
             Player next = my_match.getPlayers().get(i_next);
+            
+            List<Player> temp_players = new ArrayList<Player>(); // creiamo la lista temporanea (attuale) dei players
+            for(int y = 0; ((y < my_match.getNPlayer())); y++) temp_players.add(my_match.getPlayers().get(y)); //popoliamo la lista
+            
+            
+            // rimuovo TUTTI i giocatori morti dalla lista dei player (usando quella temporanea e il riferimento dei player da eliminare, altrimenti si incasinano gli indici)
+            for(int y = 0; ((y < temp_players.size())); y++) {
 
-            for(int i = 0; i < my_match.getNPlayer(); i++){ //scorro la lista dei giocatori per eliminare quelli morti
+                if ( !temp_players.get(y).isPlaying()) { // se il giocatore NON sta giocando (ho segnato il giocatore come morto)
+                	
+                	int actual_dead_index = my_match.getPlayers().indexOf(temp_players.get(y));
+                	my_match.handleDeadPlayer(actual_dead_index);// elimino dal gioco il player morto
 
-                if(!my_match.getPlayers().get(i).isPlaying())  //se ho segnato il giocatore come morto
-
-                    my_match.handleDeadPlayer(i); // elimino dal gioco il player morto
+                }
 
             }
-
+            
             my_match.setMyIndex(my_match.getPlayers().indexOf(my_match.getMe())); //setto il mio nuovo indice
 
             int new_next_index = my_match.getPlayers().indexOf(next); //vedo l'indice del next dopo il bilanciamento
@@ -831,6 +840,12 @@ public class Gui extends JPanel{
   
             do {
 
+            	if(my_match.getNPlayer() == 1){ //se sono l'unico giocatore rimasto
+            		
+            		my_match.setFinish(true); // termino il gioco
+            		ui.repaint(); // chiamo repaint per disegnare il messaggio di vittoria
+            	}
+            	
                 if (!my_match.isMyTurn()) {
 
                     // controllo se il giocatore successivo è vivo
@@ -846,23 +861,6 @@ public class Gui extends JPanel{
 				
                             System.out.println("ho ricevuto un evento di tipox: " + e.event+" ");
                             switch(e.event){
-
-                                /*
-                                case PICKUP:
-                                    System.out.println("player ("+e.params.get("player")+") "+my_match.getPlayers().get((Integer) e.params.get("player")).getName());
-                                    break;
-
-                                case THROW:	
-                                    System.out.println("player ("+e.params.get("player")+") "+my_match.getPlayers().get((Integer) e.params.get("player")).getName());
-                                    System.out.print("carta ("+e.params.get("card_i")+") ");
-                                    my_match.getPlayers().get((Integer) e.params.get("player")).getHand().get((Integer) e.params.get("card_i")).printCard();
-                                    System.out.println();
-                                    break;
-
-                                case TURN:	
-                                    System.out.println("next ("+e.params.get("next")+") "+my_match.getPlayers().get((Integer) e.params.get("next")).getName());
-                                    break;
-                                */
                                 
                                 case GETSTATE:
                                 	//quando arriva un evento GETSTATE (cambio dello stato del gioco), resettiamo l'indice del giocatore monitorato temporaneamente e riprendiamo la routine normale di monitoraggio
@@ -876,7 +874,7 @@ public class Gui extends JPanel{
                     } while (e != null);
                     x=0;
 
-                }
+                } 
                 
                 int monitor_i;
                 
@@ -885,27 +883,6 @@ public class Gui extends JPanel{
                 }else{
                 	monitor_i = monitor_temp;
                 }
-                
-                
-                // TODO: caso crash giocatore prima del giocatore attivo e poi del giocatore attivo:
-                //	1 - quando crasha il giocatore prima, quello che lo stava monitorando inizia correttamente a monitorare quello successivo
-                // 	2 - poi, quando crasha il giocatore attivo, gestisce male un evento DEAD (probabilmente perche' il giocatore non e' piu' nello stato del gioco quando riceve GETSTATE)
-                
-                //GameInstance: ho ricevuto un evento DEAD
-		//GameInstance: ho ricevuto un evento DEAD
-		//notifyDead() exception: 
-		//java.rmi.ConnectException: Connection refused to host: 130.136.4.146; nested exception is: 
-		//	java.net.ConnectException: Connection refused
-		//	at sun.rmi.transport.tcp.TCPEndpoint.newSocket(TCPEndpoint.java:619)
-		//	at sun.rmi.transport.tcp.TCPChannel.createConnection(TCPChannel.java:216)
-		//	at sun.rmi.transport.tcp.TCPChannel.newConnection(TCPChannel.java:202)
-		//	at sun.rmi.server.UnicastRef.newCall(UnicastRef.java:341)
-		//	at sun.rmi.registry.RegistryImpl_Stub.lookup(Unknown Source)
-		//	at game.Match.notifyDead(Match.java:410)
-		//	at game.Match.execEvent(Match.java:197)
-		//	at gui.Gui.main(Gui.java:871)
-		//Caused by: java.net.ConnectException: Connection refused
-		// ...	
                 
 
                 if(!my_match.checkIsAlive(monitor_i)){
@@ -950,9 +927,6 @@ public class Gui extends JPanel{
 						
 						monitor_temp = i_next;
                 	}
-					
-					
-				
 					
 					
 					//gui
