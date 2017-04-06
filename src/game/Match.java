@@ -26,6 +26,8 @@ public class Match{
 
     Scanner scan;
     int my_index;
+    
+    public int monitor_temp = -1; // variabile per l'indice giocatore da monitorare temporaneamente
 
     boolean local = false; //true for localhost debug
 

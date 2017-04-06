@@ -756,7 +756,9 @@ public class Gui extends JPanel{
             }
 
             i_next = new_next_index; //assegnamo new_next_index a i_next per settarlo nel nostro stato dopo il ribilanciamento
-
+            
+            //resettiamo il processo monitorato temporaneamente
+            my_match.monitor_temp = -1;
 
         }
     	
@@ -836,7 +838,7 @@ public class Gui extends JPanel{
         fr.setVisible(true);
         int x = 0;
         
-        int monitor_temp = -1; // variabile per l'indice giocatore da monitorare temporaneamente
+        
   
             do {
 
@@ -864,7 +866,7 @@ public class Gui extends JPanel{
                                 
                                 case GETSTATE:
                                 	//quando arriva un evento GETSTATE (cambio dello stato del gioco), resettiamo l'indice del giocatore monitorato temporaneamente e riprendiamo la routine normale di monitoraggio
-                                	monitor_temp = -1;
+                                	my_match.monitor_temp = -1;
 
                             }
                             my_match.execEvent(e);
@@ -878,13 +880,14 @@ public class Gui extends JPanel{
                 
                 int monitor_i;
                 
-                if (monitor_temp < 0){ // se non c'e' nessun monitoraggio temporaneo
+                if (my_match.monitor_temp < 0){ // se non c'e' nessun monitoraggio temporaneo
                 	monitor_i = (my_match.getMyIndex() + 1) % my_match.getNPlayer(); //prendo il mio successivo
                 }else{
-                	monitor_i = monitor_temp;
+                	monitor_i = my_match.monitor_temp;
                 }
                 
-
+                System.out.println(monitor_i);
+                
                 if(!my_match.checkIsAlive(monitor_i)){
                 
                 	//NOTE: ho gia' inviato il DEAD (se il player morto non e' quello in turno)
@@ -925,7 +928,7 @@ public class Gui extends JPanel{
 			
 						System.out.println("Dovrei iniziare a monitorare "+i_next);
 						
-						monitor_temp = i_next;
+						my_match.monitor_temp = i_next;
                 	}
 					
 					
